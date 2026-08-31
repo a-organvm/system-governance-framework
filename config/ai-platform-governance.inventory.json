@@ -1,0 +1,410 @@
+{
+  "schema_version": "1.0.0",
+  "as_of": "2026-08-31",
+  "purpose": "Evidence ledger for GitHub AI and repository platform controls. Unknown or inaccessible settings are never inferred to be disabled or compliant.",
+  "scope": {
+    "organizations": [
+      "a-organvm",
+      "organvm-i-theoria",
+      "organvm-ii-poiesis",
+      "organvm-iii-ergon",
+      "organvm-iv-taxis",
+      "organvm-v-logos",
+      "organvm-vi-koinonia",
+      "organvm-vii-kerygma",
+      "meta-organvm",
+      "organvm"
+    ],
+    "user_accounts": [
+      "4444J99"
+    ],
+    "repositories": [
+      "organvm-iv-taxis/system-governance-framework",
+      "organvm-iv-taxis/orchestration-start-here",
+      "organvm/organvm-engine"
+    ]
+  },
+  "controls": [
+    {
+      "id": "GH-AI-001",
+      "name": "Copilot seat allocation and billing",
+      "scopes": [
+        "organization:a-organvm",
+        "organization:organvm-i-theoria",
+        "organization:organvm-ii-poiesis",
+        "organization:organvm-iii-ergon",
+        "organization:organvm-iv-taxis",
+        "organization:organvm-v-logos",
+        "organization:organvm-vi-koinonia",
+        "organization:organvm-vii-kerygma",
+        "organization:meta-organvm",
+        "organization:organvm"
+      ],
+      "owner_role": "GitHub organization owner",
+      "verification_mode": "admin_manual",
+      "status": "needs_admin_verification",
+      "finding": "GitHub announced upfront seat charging changes, but the connected repository integration cannot read seat rosters, inactive assignments, or payment state.",
+      "evidence": [
+        {
+          "type": "announcement",
+          "source": "https://github.blog/changelog/2026-08-28-upcoming-changes-to-github-copilot-policies-and-billing/",
+          "observed_at": "2026-08-31",
+          "result": "Billing-policy announcement reviewed; no organization seat data was available to the repository integration."
+        }
+      ],
+      "next_action": "Export aggregate assigned, active, inactive, and pending-cancellation seat counts for each organization; remove orphaned seats and record the evidence digest without committing user identities.",
+      "review_due": "2026-09-01"
+    },
+    {
+      "id": "GH-AI-002",
+      "name": "Copilot model permissions",
+      "scopes": [
+        "organization:a-organvm",
+        "organization:organvm-i-theoria",
+        "organization:organvm-ii-poiesis",
+        "organization:organvm-iii-ergon",
+        "organization:organvm-iv-taxis",
+        "organization:organvm-v-logos",
+        "organization:organvm-vi-koinonia",
+        "organization:organvm-vii-kerygma",
+        "organization:meta-organvm",
+        "organization:organvm"
+      ],
+      "owner_role": "GitHub organization owner",
+      "verification_mode": "admin_manual",
+      "status": "announcement_only",
+      "finding": "GitHub announced global model-policy enforcement as generally available; effective allow and deny policy for both organizations is not exposed by this integration.",
+      "evidence": [
+        {
+          "type": "announcement",
+          "source": "https://github.blog/changelog/2026-08-26-global-model-policy-generally-available/",
+          "observed_at": "2026-08-31",
+          "result": "Product announcement verified; effective organization policy remains unverified."
+        }
+      ],
+      "next_action": "Capture each organization's allowed model set, exception path, policy owner, and effective timestamp; test one permitted and one denied model from a managed seat.",
+      "review_due": "2026-09-04"
+    },
+    {
+      "id": "GH-AI-003",
+      "name": "Copilot conversation retention",
+      "scopes": [
+        "organization:a-organvm",
+        "organization:organvm-i-theoria",
+        "organization:organvm-ii-poiesis",
+        "organization:organvm-iii-ergon",
+        "organization:organvm-iv-taxis",
+        "organization:organvm-v-logos",
+        "organization:organvm-vi-koinonia",
+        "organization:organvm-vii-kerygma",
+        "organization:meta-organvm",
+        "organization:organvm"
+      ],
+      "owner_role": "Data governance owner",
+      "verification_mode": "admin_manual",
+      "status": "announcement_only",
+      "finding": "GitHub announced lifetime retention for web chat history. The actual workspace policy, deletion path, export path, and classification constraints require an admin review.",
+      "evidence": [
+        {
+          "type": "announcement",
+          "source": "https://github.blog/changelog/2026-08-28-upcoming-changes-to-github-copilot-policies-and-billing/",
+          "observed_at": "2026-08-31",
+          "result": "Retention change announcement reviewed; no account-level retention evidence was accessible."
+        }
+      ],
+      "next_action": "Document permitted data classes, deletion and export procedures, legal hold expectations, and whether durable chat history changes repository or client-data handling rules.",
+      "review_due": "2026-09-04"
+    },
+    {
+      "id": "GH-AI-004",
+      "name": "Copilot code review default",
+      "scopes": [
+        "organization:a-organvm",
+        "organization:organvm-i-theoria",
+        "organization:organvm-ii-poiesis",
+        "organization:organvm-iii-ergon",
+        "organization:organvm-iv-taxis",
+        "organization:organvm-v-logos",
+        "organization:organvm-vi-koinonia",
+        "organization:organvm-vii-kerygma",
+        "organization:meta-organvm",
+        "organization:organvm"
+      ],
+      "owner_role": "Platform engineering owner",
+      "verification_mode": "mixed",
+      "status": "announcement_only",
+      "finding": "GitHub announced a default change from Lite to Balanced review. Effective defaults and usage impact across managed repositories are not available through the repository integration.",
+      "evidence": [
+        {
+          "type": "announcement",
+          "source": "https://github.blog/changelog/2026-08-28-upcoming-changes-to-github-copilot-policies-and-billing/",
+          "observed_at": "2026-08-31",
+          "result": "Default-change announcement reviewed; repository and organization overrides remain unverified."
+        }
+      ],
+      "next_action": "Verify the effective review mode, sample cost and finding quality on ten representative pull requests, then record an explicit default and exception rule.",
+      "review_due": "2026-09-07"
+    },
+    {
+      "id": "GH-AI-005",
+      "name": "Copilot spend budgets and alerts",
+      "scopes": [
+        "organization:a-organvm",
+        "organization:organvm-i-theoria",
+        "organization:organvm-ii-poiesis",
+        "organization:organvm-iii-ergon",
+        "organization:organvm-iv-taxis",
+        "organization:organvm-v-logos",
+        "organization:organvm-vi-koinonia",
+        "organization:organvm-vii-kerygma",
+        "organization:meta-organvm",
+        "organization:organvm"
+      ],
+      "owner_role": "GitHub billing owner",
+      "verification_mode": "admin_manual",
+      "status": "needs_admin_verification",
+      "finding": "Budgets, premium-request limits, alert recipients, and exception approvers are billing facts that the connected repository integration cannot access.",
+      "evidence": [
+        {
+          "type": "repository_file",
+          "source": "config/ai-platform-governance.inventory.json",
+          "observed_at": "2026-08-31",
+          "result": "No prior version-controlled evidence record for AI spend controls was found in the governance repository."
+        }
+      ],
+      "next_action": "Record monthly budget, warning threshold, hard or soft limit, alert recipients, premium-request policy, and exception approver for each organization; store only aggregate values in this public ledger.",
+      "review_due": "2026-09-04"
+    },
+    {
+      "id": "GH-PERSONAL-001",
+      "name": "Personal Copilot plan and billing",
+      "scopes": [
+        "user_account:4444J99"
+      ],
+      "owner_role": "Personal GitHub account owner",
+      "verification_mode": "admin_manual",
+      "status": "needs_account_owner_verification",
+      "finding": "The personal installation is not an organization seat scope. Its plan, renewal state, and usage limits are account-owner facts unavailable to the repository integration.",
+      "evidence": [
+        {
+          "type": "github_api",
+          "source": "GitHub App installed-account inventory",
+          "observed_at": "2026-08-31",
+          "result": "4444J99 classified as a user account, not an organization account."
+        }
+      ],
+      "next_action": "Account owner must record the personal Copilot plan, renewal state, usage limits, and whether personal billing is permitted for estate work.",
+      "review_due": "2026-09-04"
+    },
+    {
+      "id": "GH-PERSONAL-002",
+      "name": "Personal Copilot model access",
+      "scopes": [
+        "user_account:4444J99"
+      ],
+      "owner_role": "Personal GitHub account owner",
+      "verification_mode": "admin_manual",
+      "status": "needs_account_owner_verification",
+      "finding": "Organization model policy does not establish the personal account's effective model access or suitability for organization work.",
+      "evidence": [
+        {
+          "type": "github_api",
+          "source": "GitHub App installed-account inventory",
+          "observed_at": "2026-08-31",
+          "result": "4444J99 classified as a user account with a separate policy boundary."
+        }
+      ],
+      "next_action": "Account owner must capture the effective personal model set and record which estate workloads, if any, may use the personal policy boundary.",
+      "review_due": "2026-09-04"
+    },
+    {
+      "id": "GH-PERSONAL-003",
+      "name": "Personal Copilot conversation retention",
+      "scopes": [
+        "user_account:4444J99"
+      ],
+      "owner_role": "Personal GitHub account owner",
+      "verification_mode": "admin_manual",
+      "status": "announcement_only",
+      "finding": "GitHub announced lifetime web-chat history retention, but the personal account's effective deletion, export, and data-use boundary requires account-owner verification.",
+      "evidence": [
+        {
+          "type": "announcement",
+          "source": "https://github.blog/changelog/2026-08-28-upcoming-changes-to-github-copilot-policies-and-billing/",
+          "observed_at": "2026-08-31",
+          "result": "Retention announcement reviewed; personal account behavior remains unverified."
+        }
+      ],
+      "next_action": "Account owner must verify retention, export, and deletion behavior and prohibit client or restricted estate data until that boundary is documented.",
+      "review_due": "2026-09-04"
+    },
+    {
+      "id": "GH-PERSONAL-004",
+      "name": "Personal Copilot code review default",
+      "scopes": [
+        "user_account:4444J99"
+      ],
+      "owner_role": "Personal GitHub account owner",
+      "verification_mode": "mixed",
+      "status": "announcement_only",
+      "finding": "GitHub announced a Balanced code-review default, but the effective personal default and its usage impact are not exposed to the repository integration.",
+      "evidence": [
+        {
+          "type": "announcement",
+          "source": "https://github.blog/changelog/2026-08-28-upcoming-changes-to-github-copilot-policies-and-billing/",
+          "observed_at": "2026-08-31",
+          "result": "Default-change announcement reviewed; personal account setting remains unverified."
+        }
+      ],
+      "next_action": "Account owner must verify the effective mode and keep personal review usage separate from organization cost and quality baselines.",
+      "review_due": "2026-09-07"
+    },
+    {
+      "id": "GH-PERSONAL-005",
+      "name": "Personal Copilot spend boundary",
+      "scopes": [
+        "user_account:4444J99"
+      ],
+      "owner_role": "Personal GitHub account owner",
+      "verification_mode": "admin_manual",
+      "status": "needs_account_owner_verification",
+      "finding": "Personal subscription charges and premium usage are outside organization budgets unless explicitly allocated and approved.",
+      "evidence": [
+        {
+          "type": "github_api",
+          "source": "GitHub App installed-account inventory",
+          "observed_at": "2026-08-31",
+          "result": "4444J99 classified as a user account with a separate billing boundary."
+        }
+      ],
+      "next_action": "Account owner must record the permitted reimbursement or allocation rule, usage limit, and alert path, or mark personal AI spend as excluded from estate work.",
+      "review_due": "2026-09-04"
+    },
+    {
+      "id": "GH-REPO-001",
+      "name": "Repository rulesets: system-governance-framework",
+      "scopes": [
+        "repository:organvm-iv-taxis/system-governance-framework"
+      ],
+      "owner_role": "Repository governance maintainer",
+      "verification_mode": "mixed",
+      "status": "partial",
+      "finding": "The repository rulesets endpoint returned an empty array. This observation does not establish that no organization-level policy applies.",
+      "evidence": [
+        {
+          "type": "github_api",
+          "source": "https://api.github.com/repos/organvm-iv-taxis/system-governance-framework/rulesets",
+          "observed_at": "2026-08-31",
+          "result": "[]"
+        }
+      ],
+      "next_action": "Organization owner must capture the effective ruleset view and confirm required checks, force-push protection, deletion protection, bypass actors, and scope.",
+      "review_due": "2026-09-07"
+    },
+    {
+      "id": "GH-REPO-002",
+      "name": "Repository rulesets: orchestration-start-here",
+      "scopes": [
+        "repository:organvm-iv-taxis/orchestration-start-here"
+      ],
+      "owner_role": "Repository governance maintainer",
+      "verification_mode": "mixed",
+      "status": "partial",
+      "finding": "The repository rulesets endpoint returned an empty array. This observation does not establish that no organization-level policy applies.",
+      "evidence": [
+        {
+          "type": "github_api",
+          "source": "https://api.github.com/repos/organvm-iv-taxis/orchestration-start-here/rulesets",
+          "observed_at": "2026-08-31",
+          "result": "[]"
+        }
+      ],
+      "next_action": "Organization owner must capture the effective ruleset view and confirm required checks, force-push protection, deletion protection, bypass actors, and scope.",
+      "review_due": "2026-09-07"
+    },
+    {
+      "id": "GH-REPO-003",
+      "name": "Repository rulesets: organvm-engine",
+      "scopes": [
+        "repository:organvm/organvm-engine"
+      ],
+      "owner_role": "Repository governance maintainer",
+      "verification_mode": "mixed",
+      "status": "partial",
+      "finding": "The repository rulesets endpoint returned an empty array. This observation does not establish that no organization-level policy applies.",
+      "evidence": [
+        {
+          "type": "github_api",
+          "source": "https://api.github.com/repos/organvm/organvm-engine/rulesets",
+          "observed_at": "2026-08-31",
+          "result": "[]"
+        }
+      ],
+      "next_action": "Organization owner must capture the effective ruleset view and confirm required checks, force-push protection, deletion protection, bypass actors, and scope; coordinate with organvm-engine issue 61.",
+      "review_due": "2026-09-07"
+    },
+    {
+      "id": "GH-REPO-004",
+      "name": "Branch protection: system-governance-framework",
+      "scopes": [
+        "repository:organvm-iv-taxis/system-governance-framework"
+      ],
+      "owner_role": "GitHub organization owner",
+      "verification_mode": "mixed",
+      "status": "blocked",
+      "finding": "The GitHub App received HTTP 403 for the main-branch protection endpoint, so protection state cannot be asserted from this run.",
+      "evidence": [
+        {
+          "type": "api_error",
+          "source": "https://api.github.com/repos/organvm-iv-taxis/system-governance-framework/branches/main/protection",
+          "observed_at": "2026-08-31",
+          "result": "403 Resource not accessible by integration"
+        }
+      ],
+      "next_action": "Organization owner must export or screenshot the effective branch protection and record a redacted evidence digest in this inventory.",
+      "review_due": "2026-09-07"
+    },
+    {
+      "id": "GH-REPO-005",
+      "name": "Branch protection: orchestration-start-here",
+      "scopes": [
+        "repository:organvm-iv-taxis/orchestration-start-here"
+      ],
+      "owner_role": "GitHub organization owner",
+      "verification_mode": "mixed",
+      "status": "blocked",
+      "finding": "The GitHub App received HTTP 403 for the main-branch protection endpoint, so protection state cannot be asserted from this run.",
+      "evidence": [
+        {
+          "type": "api_error",
+          "source": "https://api.github.com/repos/organvm-iv-taxis/orchestration-start-here/branches/main/protection",
+          "observed_at": "2026-08-31",
+          "result": "403 Resource not accessible by integration"
+        }
+      ],
+      "next_action": "Organization owner must export or screenshot the effective branch protection and record a redacted evidence digest in this inventory.",
+      "review_due": "2026-09-07"
+    },
+    {
+      "id": "GH-REPO-006",
+      "name": "Branch protection: organvm-engine",
+      "scopes": [
+        "repository:organvm/organvm-engine"
+      ],
+      "owner_role": "GitHub organization owner",
+      "verification_mode": "mixed",
+      "status": "blocked",
+      "finding": "The GitHub App received HTTP 403 for the main-branch protection endpoint, so protection state cannot be asserted from this run.",
+      "evidence": [
+        {
+          "type": "api_error",
+          "source": "https://api.github.com/repos/organvm/organvm-engine/branches/main/protection",
+          "observed_at": "2026-08-31",
+          "result": "403 Resource not accessible by integration"
+        }
+      ],
+      "next_action": "Organization owner must verify the protection settings and attach the resulting evidence to organvm-engine issue 61 before expanding protection across the estate.",
+      "review_due": "2026-09-07"
+    }
+  ]
+}
