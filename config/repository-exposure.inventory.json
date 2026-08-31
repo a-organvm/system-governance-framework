@@ -27,10 +27,13 @@
       "organvm-iii-ergon/charles-universe",
       "organvm-iii-ergon/collaboration-operations-platform",
       "organvm/application-pipeline",
+      "organvm/collaboratory",
       "organvm/daily-engine",
+      "organvm/digital-income-organism-inquiry",
       "organvm/edu-organism",
       "organvm/generative-abstract-environments-studies",
       "organvm/glyph-cascade-tapes",
+      "organvm/manumissio",
       "organvm/netmode",
       "organvm/render-second-amendment",
       "organvm/speculum-opencode",
@@ -39,10 +42,7 @@
     "public_candidate": [
       "organvm-i-theoria/visual-substrate-inquiry",
       "organvm-iii-ergon/advocata",
-      "organvm-iii-ergon/surface-engine",
-      "organvm/collaboratory",
-      "organvm/digital-income-organism-inquiry",
-      "organvm/manumissio"
+      "organvm-iii-ergon/surface-engine"
     ],
     "keep_private": [
       "4444J99/engagement-record",
@@ -111,15 +111,23 @@
   },
   "decision_rule": "No repository changes visibility until its tree and reachable history pass the release gate. Uncertain product repositories use a fresh-history split.",
   "next_tranche": {
-    "name": "low-risk-public-candidates",
+    "name": "direct-transition-candidates",
     "repositories": [
       "organvm-i-theoria/visual-substrate-inquiry",
       "organvm-iii-ergon/advocata",
-      "organvm-iii-ergon/surface-engine",
+      "organvm-iii-ergon/surface-engine"
+    ],
+    "status": "pending_content_and_history_audit"
+  },
+  "initial_audit": {
+    "observed_at": "2026-08-31",
+    "issue": "https://github.com/organvm-iv-taxis/system-governance-framework/issues/67",
+    "current_tree_files_reviewed": 159,
+    "reclassified_to_split_required": [
       "organvm/collaboratory",
       "organvm/digital-income-organism-inquiry",
       "organvm/manumissio"
     ],
-    "status": "pending_content_and_history_audit"
+    "limitation": "Repository tree and branch-surface audit; external leaked-secret checks and GitHub Advanced Security evidence remain required."
   }
 }
