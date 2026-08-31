@@ -2,6 +2,10 @@
 
 # System Governance Framework
 
+> Repository exposure is governed by the
+> [public/private boundary](docs/REPOSITORY_EXPOSURE_BOUNDARY.md) and its
+> [machine-readable disposition ledger](config/repository-exposure.inventory.json).
+
 [![CI](https://github.com/organvm-i-theoria/system-governance-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/organvm-i-theoria/system-governance-framework/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-pending-lightgrey)](https://github.com/organvm-i-theoria/system-governance-framework)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/organvm-i-theoria/system-governance-framework/blob/main/LICENSE)
