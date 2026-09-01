@@ -2,11 +2,11 @@
 set -e
 
 # System Governance Framework - Installation Script
-# Usage: bash <(curl -fsSL https://raw.githubusercontent.com/4-b100m/system-governance-framework/main/scripts/install-framework.sh)
+# Usage: bash <(curl -fsSL https://raw.githubusercontent.com/organvm-iv-taxis/system-governance-framework/main/scripts/install-framework.sh)
 
 VERSION="${1:-v3.0.0}"
 PRESET="${2:-standard}"
-REPO_URL="https://raw.githubusercontent.com/4-b100m/system-governance-framework"
+REPO_URL="https://raw.githubusercontent.com/organvm-iv-taxis/system-governance-framework"
 
 # Colors for output
 RED='\033[0;31m'
@@ -78,7 +78,7 @@ else
     # Create default standard configuration
     cat > .github/governance.yml <<'EOF'
 # System Governance Framework Configuration
-# For full schema: https://github.com/4-b100m/system-governance-framework/blob/main/config/schema.json
+# For full schema: https://github.com/organvm-iv-taxis/system-governance-framework/blob/main/config/schema.json
 
 framework:
   version: "3.0.0"
@@ -129,7 +129,7 @@ on:
 jobs:
   ci:
     name: Continuous Integration
-    uses: 4-b100m/system-governance-framework/.github/workflows/reusable-ci.yml@$VERSION
+    uses: organvm-iv-taxis/system-governance-framework/.github/workflows/reusable-ci.yml@$VERSION
     with:
       config-path: '.github/governance.yml'
     secrets: inherit
@@ -152,7 +152,7 @@ on:
 jobs:
   security:
     name: Security Scanning
-    uses: 4-b100m/system-governance-framework/.github/workflows/reusable-security.yml@$VERSION
+    uses: organvm-iv-taxis/system-governance-framework/.github/workflows/reusable-security.yml@$VERSION
     with:
       config-path: '.github/governance.yml'
     secrets: inherit
@@ -263,9 +263,9 @@ echo "4. Push to GitHub and watch workflows run:"
 echo -e "   ${YELLOW}git push${NC}"
 echo ""
 echo -e "${BLUE}📚 Documentation:${NC}"
-echo "   https://github.com/4-b100m/system-governance-framework#readme"
+echo "   https://github.com/organvm-iv-taxis/system-governance-framework#readme"
 echo ""
 echo -e "${BLUE}🆘 Support:${NC}"
-echo "   https://github.com/4-b100m/system-governance-framework/discussions"
+echo "   https://github.com/organvm-iv-taxis/system-governance-framework/discussions"
 echo ""
 echo -e "${GREEN}Happy coding! 🚀${NC}"

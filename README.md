@@ -1,26 +1,39 @@
-[![ORGAN-I: Theory](https://img.shields.io/badge/ORGAN--I-Theory-1a237e?style=flat-square)](https://github.com/organvm-i-theoria) [![Language: Shell](https://img.shields.io/badge/language-Shell-89e051?style=flat-square)](https://github.com/organvm-i-theoria/system-governance-framework) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE) [![Version: 3.0.0](https://img.shields.io/badge/version-3.0.0-orange?style=flat-square)](VERSION)
+[![ORGAN-IV: Taxis](https://img.shields.io/badge/ORGAN--IV-Taxis-1a237e?style=flat-square)](https://github.com/organvm-iv-taxis) [![Language: Shell](https://img.shields.io/badge/language-Shell-89e051?style=flat-square)](https://github.com/organvm-iv-taxis/system-governance-framework) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE) [![Version: 3.0.0](https://img.shields.io/badge/version-3.0.0-orange?style=flat-square)](VERSION)
 
 # System Governance Framework
 
-[![CI](https://github.com/organvm-i-theoria/system-governance-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/organvm-i-theoria/system-governance-framework/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-pending-lightgrey)](https://github.com/organvm-i-theoria/system-governance-framework)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/organvm-i-theoria/system-governance-framework/blob/main/LICENSE)
-[![Organ I](https://img.shields.io/badge/Organ-I%20Theoria-8B5CF6)](https://github.com/organvm-i-theoria)
-[![Status](https://img.shields.io/badge/status-active-brightgreen)](https://github.com/organvm-i-theoria/system-governance-framework)
-[![Shell](https://img.shields.io/badge/lang-Shell-informational)](https://github.com/organvm-i-theoria/system-governance-framework)
+[![CI](https://github.com/organvm-iv-taxis/system-governance-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/organvm-iv-taxis/system-governance-framework/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-pending-lightgrey)](https://github.com/organvm-iv-taxis/system-governance-framework)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/organvm-iv-taxis/system-governance-framework/blob/main/LICENSE)
+[![Organ IV](https://img.shields.io/badge/Organ-IV%20Taxis-8B5CF6)](https://github.com/organvm-iv-taxis)
+[![Status](https://img.shields.io/badge/status-active-brightgreen)](https://github.com/organvm-iv-taxis/system-governance-framework)
+[![Shell](https://img.shields.io/badge/lang-Shell-informational)](https://github.com/organvm-iv-taxis/system-governance-framework)
 
 
-**A theoretical and operational framework for autonomous system governance -- formalising the principles by which a multi-organ creative-institutional system regulates itself without centralised authority.**
+**GitHub-native reusable enforcement for governance, repository health, and
+reader-mode documentation across the ORGANVM estate.**
 
 ---
 
-## Why "Governance Framework" belongs in a Theory organ
+## Repository role: enforcement, not policy authority
 
-The word *governance* is often reduced to a checklist: branch protection rules, code owners, stale-issue bots. This repository refuses that reduction. It treats governance as a *first-order epistemological problem*: how does a distributed system of creative, commercial, and communal organs arrive at decisions that are coherent, auditable, and self-correcting -- without collapsing into a single bottleneck of human approval?
+This repository lives in ORGAN-IV (Taxis / Orchestration). It packages reusable
+workflows and invokes policies defined elsewhere; it is not the canonical home
+for reader-mode editorial language, project-record schemas, or validation logic.
 
-The name *System Governance Framework* therefore signals two commitments. First, *system*: governance here is not repository-local but cross-organ, spanning the full eight-organ architecture (ORGAN I-VIII) and its ~79 repositories across eight GitHub organisations. Second, *framework*: the deliverable is not a finished policy but a composable grammar of rules, presets, and automation primitives that downstream organs -- particularly ORGAN-IV (Taxis / Orchestration) -- can instantiate for their own contexts.
+For reader-mode documentation, authority is deliberately split:
 
-This dual nature -- theoretical analysis plus operational scaffolding -- is precisely why the repository lives in ORGAN-I (Theoria) rather than ORGAN-IV. The orchestration organ *consumes* governance primitives; the theory organ *derives* them.
+| Concern | Canonical repository |
+|---|---|
+| Editorial policy, templates, and rubric | [`organvm/editorial-standards`](https://github.com/organvm/editorial-standards) |
+| Project-record and assertion schemas | [`organvm-iv-taxis/schema-definitions`](https://github.com/organvm-iv-taxis/schema-definitions) |
+| Validation and audit runtime | [`organvm/organvm-engine`](https://github.com/organvm/organvm-engine) |
+| Fleet adoption policy | [`organvm/.github`](https://github.com/organvm/.github) |
+| Reusable CI invocation | This repository |
+| Conversion waves and execution receipts | [`organvm-iv-taxis/orchestration-start-here`](https://github.com/organvm-iv-taxis/orchestration-start-here) |
+
+The split keeps vocabulary and data contracts canonical while allowing
+enforcement to evolve as version-pinned infrastructure.
 
 ---
 
@@ -40,6 +53,7 @@ This dual nature -- theoretical analysis plus operational scaffolding -- is prec
 - [Installation and Usage](#installation-and-usage)
   - [Quick Start](#quick-start)
   - [Configuration Presets](#configuration-presets)
+  - [Reader-mode Documentation Gate](#reader-mode-documentation-gate)
   - [Manual Installation](#manual-installation)
 - [Examples](#examples)
 - [Downstream Implementation](#downstream-implementation)
@@ -56,7 +70,7 @@ This dual nature -- theoretical analysis plus operational scaffolding -- is prec
 
 A multi-organ creative-institutional system faces a governance dilemma that no single tool can resolve. Consider what breaks without a formal governance framework:
 
-**Consistency collapse.** When 79 repositories across eight GitHub organisations each invent their own security policies, issue templates, and CI pipelines, the result is a patchwork of incompatible standards. A contributor moving from an ORGAN-II art repository to an ORGAN-III commercial product encounters different review norms, different labelling schemes, different quality gates. Cognitive load multiplies; contribution rates decline.
+**Consistency collapse.** When hundreds of repositories across the GitHub estate each invent their own security policies, issue templates, and CI pipelines, the result is a patchwork of incompatible standards. A contributor moving from an ORGAN-II art repository to an ORGAN-III commercial product encounters different review norms, different labelling schemes, different quality gates. Cognitive load multiplies; contribution rates decline.
 
 **Silent drift.** Without centralised governance primitives, individual repos accumulate configuration debt. Dependabot schedules diverge. Pre-commit hooks cover different subsets of checks. Security scanning tools are present in some repos and absent in others. The system drifts from its own standards without any single actor noticing, because no single actor holds the complete picture.
 
@@ -147,7 +161,7 @@ The framework requires zero additional infrastructure. Everything runs on GitHub
 ```
 system-governance-framework/
   .github/
-    workflows/           14 automation workflows (CI, CodeQL, Semgrep, release, stale, ...)
+    workflows/           Reusable and repository-local automation workflows
     actions/             Composite actions (language detection, config loading)
     agents/              AI coordinator, task templates, handoff protocols
     ISSUE_TEMPLATE/      Bug report, feature request, question (YAML forms)
@@ -187,7 +201,7 @@ Results aggregate into the PR status. All checks must pass before merge is permi
 From the root of any git repository:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/organvm-i-theoria/system-governance-framework/main/scripts/install-framework.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/organvm-iv-taxis/system-governance-framework/main/scripts/install-framework.sh)
 ```
 
 The installer creates three files:
@@ -230,6 +244,16 @@ features:
 
 The full configuration schema is defined in `config/schema.json` and supports 12 programming languages, framework-specific optimisations, Slack/Discord notification integrations, and compliance automation toggles.
 
+### Reader-mode Documentation Gate
+
+Repositories with a canonical `project-record.yml` can call the dedicated
+reader-mode workflow. It validates the record and referenced assertion evidence,
+runs the documentation audit, and uploads a machine-readable receipt. Runtime and
+schema revisions are required as immutable commit SHAs.
+
+See [Reader-mode documentation CI](docs/READER_MODE_CI.md) for the thin caller,
+input contract, adoption mode, strict mode, and receipt format.
+
 ### Manual Installation
 
 If you prefer not to use the installer, create the wrapper workflows manually. Each workflow is a single `uses:` call to the corresponding reusable workflow in this repository, pinned to a version tag:
@@ -237,7 +261,7 @@ If you prefer not to use the installer, create the wrapper workflows manually. E
 ```yaml
 jobs:
   ci:
-    uses: organvm-i-theoria/system-governance-framework/.github/workflows/reusable-ci.yml@v3.0.0
+    uses: organvm-iv-taxis/system-governance-framework/.github/workflows/reusable-ci.yml@v3.0.0
     with:
       config-path: '.github/governance.yml'
     secrets: inherit
@@ -284,24 +308,31 @@ Result: every PR triggers CodeQL, Semgrep, license validation, and SOC2 evidence
 
 ### Scenario 3: Cross-organ governance audit
 
-ORGAN-IV (Taxis) needs to verify that all 79 repositories meet minimum governance standards. The framework's config schema provides a machine-readable contract: any repository whose `governance.yml` validates against `config/schema.json` and whose preset is at least `standard` meets the baseline. The audit reduces to a single API call per repository.
+ORGAN-IV (Taxis) needs to verify that repositories across the estate meet minimum governance standards. The framework's config schema provides a machine-readable contract: any repository whose `governance.yml` validates against `config/schema.json` and whose preset is at least `standard` meets the baseline. The audit reduces to a single API call per repository.
 
 ---
 
 ## Downstream Implementation
 
-This repository is a **source** in the ORGAN dependency graph. The flow is:
+This repository is an **enforcement distributor** in the ORGAN dependency graph.
+Consumer repositories call its version-pinned workflows; those workflows in turn
+use canonical policy, schema, and runtime authorities. The framework therefore
+does not fork or restate their vocabularies.
 
+For reader-mode documentation, the execution path is:
+
+```text
+editorial-standards + schema-definitions + organvm-engine
+                         |
+                         v
+              system-governance-framework
+                         |
+                         v
+                 consumer repositories
 ```
-ORGAN-I (Theoria)                  ORGAN-IV (Taxis)
-system-governance-framework   -->  agentic-titan (orchestration engine)
-                              -->  petasum-super-petasum (routing mesh)
-                              -->  universal-node-network (node graph)
-```
 
-ORGAN-IV consumes the governance primitives defined here -- reusable workflows, config schema, preset definitions -- and operationalises them across all eight organs. ORGAN-IV does not *define* governance policy; it *enforces* the policies that ORGAN-I theorises.
-
-No back-edges exist in this dependency. ORGAN-III (Ergon) commercial repositories may consume governance workflows, but ORGAN-I never depends on ORGAN-III. This constraint preserves the epistemological independence of the theory organ: governance principles are derived from first principles, not from commercial requirements.
+ORGAN-III commercial repositories and every other organ may consume the same
+workflow without transferring policy ownership into this repository.
 
 ---
 
@@ -340,6 +371,7 @@ The long-term vision is a **Governance-as-Code platform**: a declarative policy 
 | [ROADMAP.md](./docs/ROADMAP.md) | Strategic roadmap with success metrics and risk management |
 | [GOVERNANCE_ANALYSIS.md](./docs/GOVERNANCE_ANALYSIS.md) | Audit log of governance improvements and validation results |
 | [PRODUCT_ARCHITECTURE.md](./docs/PRODUCT_ARCHITECTURE.md) | Framework-as-Code product design and business model |
+| [READER_MODE_CI.md](./docs/READER_MODE_CI.md) | Reader-mode validation workflow, inputs, outputs, and adoption path |
 | [config/schema.json](config/schema.json) | JSON Schema for governance.yml validation |
 | [ORGAN-IV: agentic-titan](https://github.com/organvm-iv-taxis/agentic-titan) | Downstream orchestration engine consuming governance primitives |
 
@@ -347,8 +379,8 @@ The long-term vision is a **Governance-as-Code platform**: a declarative policy 
 
 | Organ | Organisation | Relationship |
 |-------|-------------|-------------|
-| I -- Theoria | [organvm-i-theoria](https://github.com/organvm-i-theoria) | **Home organ.** Governance is derived here as theory. |
-| IV -- Taxis | [organvm-iv-taxis](https://github.com/organvm-iv-taxis) | **Primary consumer.** Enforces governance across all organs. |
+| I -- Theoria | [organvm-i-theoria](https://github.com/organvm-i-theoria) | Supplies theoretical context without owning this enforcement package. |
+| IV -- Taxis | [organvm-iv-taxis](https://github.com/organvm-iv-taxis) | **Home organ.** Distributes reusable enforcement across all organs. |
 | III -- Ergon | [organvm-iii-ergon](https://github.com/organvm-iii-ergon) | Commercial repos consume enterprise preset. |
 | VIII -- Meta | [meta-organvm](https://github.com/meta-organvm) | Umbrella org; governance standards flow through meta. |
 
@@ -378,7 +410,8 @@ Key points:
 
 **[@4444J99](https://github.com/4444J99)**
 
-Part of [ORGAN-I: Theoria](https://github.com/organvm-i-theoria) -- the epistemological and theoretical foundation of the eight-organ creative-institutional system.
+Part of [ORGAN-IV: Taxis](https://github.com/organvm-iv-taxis) -- the orchestration
+and enforcement layer of the eight-organ creative-institutional system.
 
 For security vulnerabilities, see [SECURITY.md](.github/SECURITY.md).
-For support, open a [GitHub Discussion](https://github.com/organvm-i-theoria/system-governance-framework/discussions) or [Issue](https://github.com/organvm-i-theoria/system-governance-framework/issues).
+For support, open a [GitHub Discussion](https://github.com/organvm-iv-taxis/system-governance-framework/discussions) or [Issue](https://github.com/organvm-iv-taxis/system-governance-framework/issues).

@@ -1,0 +1,603 @@
+name: Reusable Reader-mode Documentation
+
+on:
+  workflow_call:
+    inputs:
+      engine-ref:
+        description: Immutable 40-character organvm-engine commit SHA
+        required: true
+        type: string
+      schema-ref:
+        description: Immutable 40-character schema-definitions commit SHA
+        required: true
+        type: string
+      project-record:
+        description: Project-record path, relative to repository-root
+        required: false
+        type: string
+        default: project-record.yml
+      project-schema:
+        description: Project schema path, relative to schema-definitions
+        required: false
+        type: string
+        default: schemas/project-record-v1.schema.json
+      assertion-schema:
+        description: Assertion schema path, relative to schema-definitions
+        required: false
+        type: string
+        default: schemas/assertion-evidence.v1.schema.json
+      repository-root:
+        description: Repository subtree to validate and audit
+        required: false
+        type: string
+        default: .
+      strict-audit:
+        description: Fail when the documentation audit contains error findings
+        required: false
+        type: boolean
+        default: false
+      artifact-name:
+        description: Name of the JSON receipt artifact
+        required: false
+        type: string
+        default: reader-mode-documentation-receipt
+      retention-days:
+        description: Receipt artifact retention period
+        required: false
+        type: number
+        default: 30
+    outputs:
+      validation-status:
+        description: Project-record and assertion validation status
+        value: ${{ jobs.reader-mode.outputs.validation-status }}
+      audit-status:
+        description: Documentation audit command status
+        value: ${{ jobs.reader-mode.outputs.audit-status }}
+      overall-status:
+        description: Combined workflow status
+        value: ${{ jobs.reader-mode.outputs.overall-status }}
+
+permissions:
+  contents: read
+
+jobs:
+  reader-mode:
+    name: Validate and audit reader-mode documentation
+    runs-on: ubuntu-latest
+    outputs:
+      validation-status: ${{ steps.status.outputs.validation-status }}
+      audit-status: ${{ steps.status.outputs.audit-status }}
+      overall-status: ${{ steps.status.outputs.overall-status }}
+
+    steps:
+      - name: Checkout consumer repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          path: consumer
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Checkout canonical schemas
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: organvm-iv-taxis/schema-definitions
+          ref: ${{ inputs.schema-ref }}
+          path: schema-definitions
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Verify immutable revisions
+        id: revisions
+        env:
+          ENGINE_REF: ${{ inputs.engine-ref }}
+          SCHEMA_REF: ${{ inputs.schema-ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision_pattern='^[0-9a-fA-F]{40}$'
+          if [[ ! "$ENGINE_REF" =~ $revision_pattern ]]; then
+            echo "engine-ref must be a 40-character commit SHA" >&2
+            exit 1
+          fi
+          if [[ ! "$SCHEMA_REF" =~ $revision_pattern ]]; then
+            echo "schema-ref must be a 40-character commit SHA" >&2
+            exit 1
+          fi
+
+          schema_commit=$(git -C "$GITHUB_WORKSPACE/schema-definitions" rev-parse HEAD)
+          if [[ "${schema_commit,,}" != "${SCHEMA_REF,,}" ]]; then
+            echo "Checked-out schema commit does not match schema-ref" >&2
+            exit 1
+          fi
+          echo "schema-commit=$schema_commit" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve bounded input paths
+        id: paths
+        env:
+          REPOSITORY_ROOT: ${{ inputs.repository-root }}
+          PROJECT_RECORD: ${{ inputs.project-record }}
+          PROJECT_SCHEMA: ${{ inputs.project-schema }}
+          ASSERTION_SCHEMA: ${{ inputs.assertion-schema }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          workspace = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
+          consumer = (workspace / "consumer").resolve()
+          schemas = (workspace / "schema-definitions").resolve()
+
+          canonical_schema_paths = {
+              "PROJECT_SCHEMA": "schemas/project-record-v1.schema.json",
+              "ASSERTION_SCHEMA": "schemas/assertion-evidence.v1.schema.json",
+          }
+          for variable, expected in canonical_schema_paths.items():
+              if os.environ[variable] != expected:
+                  raise SystemExit(
+                      f"{variable.lower().replace('_', '-')} must be the canonical "
+                      f"path {expected!r} for this v1 workflow"
+                  )
+
+          def resolve_within(base: Path, relative: str, label: str) -> Path:
+              if not relative or Path(relative).is_absolute():
+                  raise SystemExit(f"{label} must be a non-empty relative path")
+              if any(ord(character) < 32 or ord(character) == 127 for character in relative):
+                  raise SystemExit(f"{label} contains a control character")
+              candidate = (base / relative).resolve()
+              try:
+                  candidate.relative_to(base)
+              except ValueError as exc:
+                  raise SystemExit(f"{label} escapes its checkout: {relative}") from exc
+              return candidate
+
+          root = resolve_within(consumer, os.environ["REPOSITORY_ROOT"], "repository-root")
+          record = resolve_within(root, os.environ["PROJECT_RECORD"], "project-record")
+          project_schema = resolve_within(
+              schemas,
+              os.environ["PROJECT_SCHEMA"],
+              "project-schema",
+          )
+          assertion_schema = resolve_within(
+              schemas,
+              os.environ["ASSERTION_SCHEMA"],
+              "assertion-schema",
+          )
+          semantic_validator = resolve_within(
+              schemas,
+              "scripts/validate_governance_memory.py",
+              "semantic-validator",
+          )
+
+          required = {
+              "repository-root": root,
+              "project-record": record,
+              "project-schema": project_schema,
+              "assertion-schema": assertion_schema,
+              "semantic-validator": semantic_validator,
+          }
+          for label, path in required.items():
+              expected = path.is_dir() if label == "repository-root" else path.is_file()
+              if not expected:
+                  raise SystemExit(f"{label} does not exist: {path}")
+
+          result_dir = workspace / "reader-mode-results"
+          result_dir.mkdir(exist_ok=True)
+          output = Path(os.environ["GITHUB_OUTPUT"])
+          with output.open("a", encoding="utf-8") as stream:
+              stream.write(f"root={root}\n")
+              stream.write(f"record={record}\n")
+              stream.write(f"project-schema={project_schema}\n")
+              stream.write(f"assertion-schema={assertion_schema}\n")
+              stream.write(f"semantic-validator={semantic_validator}\n")
+              stream.write(f"result-dir={result_dir}\n")
+          PY
+
+      - name: Install pinned documentation runtime
+        id: install
+        continue-on-error: true
+        env:
+          ENGINE_REF: ${{ inputs.engine-ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check \
+            "git+https://github.com/organvm/organvm-engine.git@${ENGINE_REF}"
+          engine_version=$(python -c \
+            'from importlib.metadata import version; print(version("organvm-engine"))')
+          echo "engine-version=$engine_version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate project record and assertion evidence
+        id: validate
+        if: steps.install.outcome == 'success'
+        continue-on-error: true
+        env:
+          PROJECT_RECORD_PATH: ${{ steps.paths.outputs.record }}
+          PROJECT_SCHEMA_PATH: ${{ steps.paths.outputs.project-schema }}
+          ASSERTION_SCHEMA_PATH: ${{ steps.paths.outputs.assertion-schema }}
+          REPOSITORY_ROOT_PATH: ${{ steps.paths.outputs.root }}
+          VALIDATION_RESULT_PATH: ${{ steps.paths.outputs.result-dir }}/project-record-validation.json
+          ACTUAL_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          organvm docs validate "$PROJECT_RECORD_PATH" \
+            --schema "$PROJECT_SCHEMA_PATH" \
+            --assertion-schema "$ASSERTION_SCHEMA_PATH" \
+            --root "$REPOSITORY_ROOT_PATH" \
+            --actual-repository "$ACTUAL_REPOSITORY" \
+            --require-git-tracked-evidence \
+            --json > "$VALIDATION_RESULT_PATH"
+
+      - name: Validate canonical assertion semantics
+        id: semantic
+        if: steps.install.outcome == 'success'
+        continue-on-error: true
+        env:
+          PROJECT_RECORD_PATH: ${{ steps.paths.outputs.record }}
+          REPOSITORY_ROOT_PATH: ${{ steps.paths.outputs.root }}
+          SEMANTIC_VALIDATOR_PATH: ${{ steps.paths.outputs.semantic-validator }}
+          SCHEMAS_DIR_PATH: ${{ github.workspace }}/schema-definitions/schemas
+          RESULT_PATH: ${{ steps.paths.outputs.result-dir }}/canonical-assertion-validation.json
+          EXPECTED_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import importlib.util
+          import json
+          import os
+          from pathlib import Path
+          from urllib.parse import urlparse
+
+          import yaml
+
+          record_path = Path(os.environ["PROJECT_RECORD_PATH"]).resolve()
+          root = Path(os.environ["REPOSITORY_ROOT_PATH"]).resolve()
+          validator_path = Path(os.environ["SEMANTIC_VALIDATOR_PATH"]).resolve()
+          schemas_dir = Path(os.environ["SCHEMAS_DIR_PATH"]).resolve()
+          result_path = Path(os.environ["RESULT_PATH"]).resolve()
+
+          spec = importlib.util.spec_from_file_location(
+              "canonical_governance_validator",
+              validator_path,
+          )
+          if spec is None or spec.loader is None:
+              raise SystemExit(f"cannot load canonical validator: {validator_path}")
+          validator = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(validator)
+
+          record = yaml.safe_load(record_path.read_text(encoding="utf-8"))
+          claims = record.get("claim_references", []) if isinstance(record, dict) else []
+          results = []
+          failures = []
+
+          actual_repository = os.environ["EXPECTED_REPOSITORY"].casefold()
+          canonical_repository = (
+              str(record.get("canonical_repository", "")).casefold()
+              if isinstance(record, dict)
+              else ""
+          )
+          repository_role = record.get("repository_role") if isinstance(record, dict) else None
+          if repository_role == "canonical" and canonical_repository != actual_repository:
+              failures.append(
+                  "repository_role canonical requires canonical_repository to equal "
+                  f"the checked-out GitHub repository {actual_repository!r}"
+              )
+          if repository_role in {"mirror", "deployment-artifact", "upstream-fork"}:
+              if canonical_repository == actual_repository:
+                  failures.append(
+                      f"repository_role {repository_role!r} must identify a distinct "
+                      "canonical_repository"
+                  )
+
+          if not isinstance(claims, list):
+              failures.append("project record claim_references is not a list")
+              claims = []
+          if not claims:
+              failures.append("project record contains no claim_references")
+
+          for index, claim in enumerate(claims):
+              if not isinstance(claim, dict):
+                  failures.append(f"claim_references[{index}] is not a mapping")
+                  continue
+              reference = claim.get("assertion_ref")
+              assertion_id = claim.get("assertion_id")
+              if not isinstance(reference, str) or not reference:
+                  failures.append(f"claim_references[{index}] has no assertion_ref")
+                  continue
+
+              parsed = urlparse(reference)
+              if parsed.scheme or parsed.netloc:
+                  failures.append(
+                      f"claim_references[{index}] uses a remote assertion_ref; "
+                      "project-record.v1 requires a local, commit-bound record"
+                  )
+                  continue
+
+              assertion_path = (root / reference).resolve()
+              try:
+                  relative_path = assertion_path.relative_to(root)
+              except ValueError:
+                  failures.append(f"claim_references[{index}] escapes repository root")
+                  continue
+              if not assertion_path.is_file():
+                  failures.append(f"missing assertion record: {relative_path.as_posix()}")
+                  continue
+
+              data = None
+              try:
+                  if assertion_path.suffix.lower() in {".yaml", ".yml"}:
+                      data = yaml.safe_load(assertion_path.read_text(encoding="utf-8"))
+                  else:
+                      data = json.loads(assertion_path.read_text(encoding="utf-8"))
+                  schema_errors, semantic_errors = validator.validate_document(
+                      data,
+                      schemas_dir,
+                  )
+              except (OSError, ValueError, json.JSONDecodeError, yaml.YAMLError) as exc:
+                  schema_errors, semantic_errors = [str(exc)], []
+
+              identity_errors = []
+              if isinstance(data, dict) and data.get("assertion_id") != assertion_id:
+                  identity_errors.append(
+                      f"assertion_id {data.get('assertion_id')!r} does not match "
+                      f"claim reference {assertion_id!r}"
+                  )
+              errors = [
+                  *(f"schema: {error}" for error in schema_errors),
+                  *(f"semantic: {error}" for error in semantic_errors),
+                  *(f"identity: {error}" for error in identity_errors),
+              ]
+              results.append(
+                  {
+                      "claim_index": index,
+                      "assertion_id": assertion_id,
+                      "path": relative_path.as_posix(),
+                      "status": "failed" if errors else "passed",
+                      "errors": errors,
+                  }
+              )
+              failures.extend(f"{relative_path.as_posix()}: {error}" for error in errors)
+
+          report = {
+              "contract_name": "reader-mode-assertion-validation.v1",
+              "validator": "schema-definitions/scripts/validate_governance_memory.py",
+              "checked": len(results),
+              "status": "failed" if failures else "passed",
+              "results": results,
+              "errors": failures,
+          }
+          result_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+          if failures:
+              raise SystemExit("canonical assertion validation failed")
+          PY
+
+      - name: Audit documentation surface
+        id: audit
+        if: steps.install.outcome == 'success'
+        continue-on-error: true
+        env:
+          STRICT_AUDIT: ${{ inputs.strict-audit }}
+          REPOSITORY_ROOT_PATH: ${{ steps.paths.outputs.root }}
+          AUDIT_RESULT_PATH: ${{ steps.paths.outputs.result-dir }}/documentation-audit.json
+        shell: bash
+        run: |
+          args=(
+            docs audit "$REPOSITORY_ROOT_PATH"
+            --format json
+            --output "$AUDIT_RESULT_PATH"
+          )
+          if [[ "$STRICT_AUDIT" == "true" ]]; then
+            args+=(--strict)
+          fi
+          organvm "${args[@]}"
+
+      - name: Calculate statuses
+        id: status
+        if: always()
+        env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          VALIDATION_OUTCOME: ${{ steps.validate.outcome }}
+          SEMANTIC_OUTCOME: ${{ steps.semantic.outcome }}
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+        shell: bash
+        run: |
+          status_for() {
+            case "$1" in
+              success) echo passed ;;
+              failure) echo failed ;;
+              *) echo skipped ;;
+            esac
+          }
+
+          validation_status=failed
+          if [[ "$VALIDATION_OUTCOME" == "success" && "$SEMANTIC_OUTCOME" == "success" ]]; then
+            validation_status=passed
+          elif [[ "$VALIDATION_OUTCOME" != "failure" && "$SEMANTIC_OUTCOME" != "failure" ]]; then
+            validation_status=skipped
+          fi
+          audit_status=$(status_for "$AUDIT_OUTCOME")
+          overall_status=failed
+          if [[ "$INSTALL_OUTCOME" == "success" && \
+                "$VALIDATION_OUTCOME" == "success" && \
+                "$SEMANTIC_OUTCOME" == "success" && \
+                "$AUDIT_OUTCOME" == "success" ]]; then
+            overall_status=passed
+          fi
+
+          echo "validation-status=$validation_status" >> "$GITHUB_OUTPUT"
+          echo "audit-status=$audit_status" >> "$GITHUB_OUTPUT"
+          echo "overall-status=$overall_status" >> "$GITHUB_OUTPUT"
+
+      - name: Write machine-readable receipt
+        if: always()
+        env:
+          RESULT_DIR: ${{ steps.paths.outputs.result-dir }}
+          ENGINE_REF: ${{ inputs.engine-ref }}
+          ENGINE_VERSION: ${{ steps.install.outputs.engine-version }}
+          SCHEMA_REF: ${{ inputs.schema-ref }}
+          SCHEMA_COMMIT: ${{ steps.revisions.outputs.schema-commit }}
+          REPOSITORY_ROOT: ${{ inputs.repository-root }}
+          PROJECT_RECORD: ${{ inputs.project-record }}
+          PROJECT_SCHEMA: ${{ inputs.project-schema }}
+          ASSERTION_SCHEMA: ${{ inputs.assertion-schema }}
+          STRICT_AUDIT: ${{ inputs.strict-audit }}
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          VALIDATION_STATUS: ${{ steps.status.outputs.validation-status }}
+          SEMANTIC_OUTCOME: ${{ steps.semantic.outcome }}
+          AUDIT_STATUS: ${{ steps.status.outputs.audit-status }}
+          OVERALL_STATUS: ${{ steps.status.outputs.overall-status }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import platform
+          import subprocess
+          import sys
+          from datetime import datetime, timezone
+          from importlib.metadata import PackageNotFoundError, distribution
+          from pathlib import Path
+
+          result_dir = Path(os.environ.get("RESULT_DIR") or "reader-mode-results")
+          result_dir.mkdir(exist_ok=True)
+
+          def read_report(name: str) -> dict:
+              path = result_dir / name
+              if not path.is_file():
+                  return {"available": False}
+              try:
+                  return {"available": True, "report": json.loads(path.read_text())}
+              except (OSError, json.JSONDecodeError) as exc:
+                  return {"available": False, "error": str(exc)}
+
+          def direct_url(package: str) -> dict | None:
+              try:
+                  raw = distribution(package).read_text("direct_url.json")
+              except PackageNotFoundError:
+                  return None
+              if not raw:
+                  return None
+              try:
+                  return json.loads(raw)
+              except json.JSONDecodeError:
+                  return {"unparsed": raw}
+
+          freeze = subprocess.run(
+              [sys.executable, "-m", "pip", "freeze", "--all"],
+              check=False,
+              capture_output=True,
+              text=True,
+          )
+
+          receipt = {
+              "contract_name": "reader-mode-ci.receipt.v1",
+              "generated_at": datetime.now(timezone.utc).isoformat(),
+              "repository": {
+                  "full_name": os.environ["GITHUB_REPOSITORY"],
+                  "commit": os.environ["GITHUB_SHA"],
+                  "ref": os.environ["GITHUB_REF"],
+                  "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              },
+              "toolchain": {
+                  "engine_repository": "organvm/organvm-engine",
+                  "engine_ref": os.environ["ENGINE_REF"],
+                  "engine_version": os.environ.get("ENGINE_VERSION") or None,
+                  "schema_repository": "organvm-iv-taxis/schema-definitions",
+                  "schema_ref": os.environ["SCHEMA_REF"],
+                  "schema_commit": os.environ.get("SCHEMA_COMMIT") or None,
+                  "engine_direct_url": direct_url("organvm-engine"),
+                  "environment": {
+                      "python": sys.version,
+                      "platform": platform.platform(),
+                      "runner_os": os.environ.get("RUNNER_OS"),
+                      "runner_arch": os.environ.get("RUNNER_ARCH"),
+                      "pip_freeze": freeze.stdout.splitlines() if freeze.returncode == 0 else None,
+                      "pip_freeze_error": freeze.stderr.strip() or None,
+                  },
+              },
+              "configuration": {
+                  "repository_root": os.environ["REPOSITORY_ROOT"],
+                  "project_record": os.environ["PROJECT_RECORD"],
+                  "project_schema": os.environ["PROJECT_SCHEMA"],
+                  "assertion_schema": os.environ["ASSERTION_SCHEMA"],
+                  "require_git_tracked_evidence": True,
+                  "strict_audit": os.environ["STRICT_AUDIT"] == "true",
+              },
+              "results": {
+                  "overall_status": os.environ["OVERALL_STATUS"],
+                  "runtime_install": os.environ.get("INSTALL_OUTCOME") or "skipped",
+                  "project_record_validation": {
+                      "status": os.environ["VALIDATION_STATUS"],
+                      **read_report("project-record-validation.json"),
+                  },
+                  "canonical_assertion_validation": {
+                      "status": (
+                          "passed" if os.environ.get("SEMANTIC_OUTCOME") == "success"
+                          else "failed" if os.environ.get("SEMANTIC_OUTCOME") == "failure"
+                          else "skipped"
+                      ),
+                      **read_report("canonical-assertion-validation.json"),
+                  },
+                  "documentation_audit": {
+                      "status": os.environ["AUDIT_STATUS"],
+                      **read_report("documentation-audit.json"),
+                  },
+              },
+          }
+          (result_dir / "receipt.json").write_text(
+              json.dumps(receipt, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Publish run summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "# Reader-mode documentation"
+            echo
+            echo "- Project record and assertions: ${{ steps.status.outputs.validation-status }}"
+            echo "- Documentation audit: ${{ steps.status.outputs.audit-status }}"
+            echo "- Strict audit: ${{ inputs.strict-audit }}"
+            echo "- Overall: ${{ steps.status.outputs.overall-status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload validation receipt
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: reader-mode-results/*.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.retention-days }}
+
+      - name: Enforce documentation gate
+        if: always()
+        env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          VALIDATION_OUTCOME: ${{ steps.validate.outcome }}
+          SEMANTIC_OUTCOME: ${{ steps.semantic.outcome }}
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+        shell: bash
+        run: |
+          if [[ "$INSTALL_OUTCOME" != "success" ]]; then
+            echo "Pinned organvm-engine installation failed" >&2
+            exit 1
+          fi
+          if [[ "$VALIDATION_OUTCOME" != "success" ]]; then
+            echo "Project-record or assertion validation failed" >&2
+            exit 1
+          fi
+          if [[ "$SEMANTIC_OUTCOME" != "success" ]]; then
+            echo "Canonical assertion semantic validation failed" >&2
+            exit 1
+          fi
+          if [[ "$AUDIT_OUTCOME" != "success" ]]; then
+            echo "Documentation audit failed at the selected strictness" >&2
+            exit 1
+          fi
